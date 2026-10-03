@@ -7,31 +7,48 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 
 public class MainPage extends BasePage {
 
-    private static final By LOGIN_BUTTON = By.xpath("//button[text()='Войти в аккаунт']");
-    private static final By PERSONAL_ACCOUNT_BUTTON = By.xpath("//a[@href='/account']");
-    private static final By CONSTRUCTOR_BUTTON = By.xpath("//p[text()='Конструктор']");
-    private static final By LOGO = By.xpath("//div[@class='AppHeader_header__logo__2D0X2']");
-    private static final By BUNS_TAB = By.xpath("//span[text()='Булки']");
-    private static final By SAUCES_TAB = By.xpath("//span[text()='Соусы']");
-    private static final By FILLINGS_TAB = By.xpath("//span[text()='Начинки']");
-    private static final By ORDER_BUTTON = By.xpath("//button[contains(., 'Оформить заказ')]");
-    private static final By BUNS_SECTION = By.xpath("//h2[text()='Булки']");
-    private static final By SAUCES_SECTION = By.xpath("//h2[text()='Соусы']");
-    private static final By FILLINGS_SECTION = By.xpath("//h2[text()='Начинки']");
+    private static final By LOGIN_BUTTON =
+            By.xpath("//button[normalize-space()='Войти в аккаунт']");
+
+    private static final By PERSONAL_ACCOUNT_BUTTON =
+            By.xpath("//p[normalize-space()='Личный Кабинет']/ancestor::a[1]");
+
+    private static final By LOGO =
+            By.cssSelector("div[class*='AppHeader_header__logo']");
+
+    private static final By BUNS_TAB =
+            By.xpath("//div[contains(@class,'tab_tab')][.//span[normalize-space()='Булки']]");
+
+    private static final By SAUCES_TAB =
+            By.xpath("//div[contains(@class,'tab_tab')][.//span[normalize-space()='Соусы']]");
+
+    private static final By FILLINGS_TAB =
+            By.xpath("//div[contains(@class,'tab_tab')][.//span[normalize-space()='Начинки']]");
+
+    private static final By ACTIVE_TAB =
+            By.xpath("//div[contains(@class, 'tab_tab_type_current')]//span");
 
     public MainPage(WebDriver driver) {
         super(driver);
     }
 
-    @Step("Ожидание загрузки главной страницы")
-    public MainPage waitForMainPage() {
-        wait.until(ExpectedConditions.visibilityOfElementLocated(ORDER_BUTTON));
-        return this;
-    }
-
     @Step("Открыть главную страницу")
     public MainPage open(String url) {
         driver.get(url);
+
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(LOGIN_BUTTON)
+        );
+
+        return this;
+    }
+
+    @Step("Ожидание загрузки главной страницы")
+    public MainPage waitForMainPage() {
+        wait.until(
+                ExpectedConditions.visibilityOfElementLocated(LOGO)
+        );
+
         return this;
     }
 
@@ -41,59 +58,59 @@ public class MainPage extends BasePage {
         return new LoginPage(driver);
     }
 
-    @Step("Клик по кнопке 'Личный кабинет'")
-    public LoginPage clickPersonalAccount() {
+    @Step("Клик по 'Личный Кабинет' (неавторизованный)")
+    public LoginPage clickPersonalAccountAsGuest() {
         click(PERSONAL_ACCOUNT_BUTTON);
         return new LoginPage(driver);
     }
 
-    @Step("Клик по кнопке 'Конструктор'")
-    public MainPage clickConstructor() {
-        click(CONSTRUCTOR_BUTTON);
-        return this;
-    }
+    @Step("Клик по 'Личный Кабинет' (авторизованный)")
+    public ProfilePage clickPersonalAccountAsUser() {
+        click(PERSONAL_ACCOUNT_BUTTON);
 
-    @Step("Клик по логотипу Stellar Burgers")
-    public MainPage clickLogo() {
-        click(LOGO);
-        return this;
+        wait.until(ExpectedConditions.urlContains("/account"));
+
+        return new ProfilePage(driver);
     }
 
     @Step("Клик по табу 'Булки'")
     public MainPage clickBunsTab() {
-        click(BUNS_TAB);
+        jsClick(BUNS_TAB);
         return this;
     }
 
     @Step("Клик по табу 'Соусы'")
     public MainPage clickSaucesTab() {
-        click(SAUCES_TAB);
+        jsClick(SAUCES_TAB);
         return this;
     }
 
     @Step("Клик по табу 'Начинки'")
     public MainPage clickFillingsTab() {
-        click(FILLINGS_TAB);
+        jsClick(FILLINGS_TAB);
         return this;
     }
 
-    @Step("Проверка отображения раздела 'Булки'")
-    public boolean isBunsSectionDisplayed() {
-        return isDisplayed(BUNS_SECTION);
+    @Step("Проверка активности таба: {tabName}")
+    public boolean isTabActive(String tabName) {
+        return getText(ACTIVE_TAB).equals(tabName);
     }
 
-    @Step("Проверка отображения раздела 'Соусы'")
-    public boolean isSaucesSectionDisplayed() {
-        return isDisplayed(SAUCES_SECTION);
+    public boolean isBunsTabActive() {
+        return isTabActive("Булки");
     }
 
-    @Step("Проверка отображения раздела 'Начинки'")
-    public boolean isFillingsSectionDisplayed() {
-        return isDisplayed(FILLINGS_SECTION);
+    public boolean isSaucesTabActive() {
+        return isTabActive("Соусы");
     }
 
-    @Step("Проверка, что пользователь авторизован (видна кнопка 'Оформить заказ')")
+    public boolean isFillingsTabActive() {
+        return isTabActive("Начинки");
+    }
+
+    @Step("Проверка, что пользователь авторизован")
     public boolean isAuthorized() {
-        return isDisplayed(ORDER_BUTTON);
+        return !driver.getCurrentUrl().contains("/login")
+                && isDisplayed(PERSONAL_ACCOUNT_BUTTON);
     }
 }

@@ -1,6 +1,5 @@
 package praktikum.tests;
 
-import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.junit5.AllureJunit5;
@@ -15,7 +14,7 @@ import praktikum.pages.MainPage;
 import praktikum.pages.ProfilePage;
 import praktikum.util.UserGenerator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Epic("Stellar Burgers UI")
 @Feature("Выход из аккаунта")
@@ -23,7 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Тесты выхода из аккаунта")
 class LogoutTest {
 
-    private static final String URL = "https://qa-stellarburgers.education-services.ru/";
+    private static final String URL =
+            "https://qa-stellarburgers.education-services.ru/";
+
     private WebDriver driver;
     private UserApiClient apiClient;
     private User user;
@@ -33,11 +34,13 @@ class LogoutTest {
     void setUp() {
         String browser = System.getProperty("browser", "chrome");
         driver = WebDriverConfig.createDriver(browser);
+
         apiClient = new UserApiClient();
         user = UserGenerator.randomUser();
 
-        var regResponse = apiClient.register(user);
-        accessToken = regResponse.jsonPath().getString("accessToken");
+        accessToken = apiClient.register(user)
+                .jsonPath()
+                .getString("accessToken");
     }
 
     @AfterEach
@@ -45,24 +48,29 @@ class LogoutTest {
         if (accessToken != null) {
             apiClient.deleteUser(accessToken);
         }
+
         if (driver != null) {
             driver.quit();
         }
     }
 
     @Test
-    @DisplayName("Выход по кнопке 'Выйти' в личном кабинете")
+    @DisplayName("Выход по кнопке 'Выход' в личном кабинете")
     void logoutFromProfile() {
-        new MainPage(driver).open(URL)
+        MainPage mainPage = new MainPage(driver)
+                .open(URL)
                 .clickLoginButton()
-                .loginAs(user.email, user.password);
+                .loginAs(user.email, user.password)
+                .waitForMainPage();
 
-        new MainPage(driver).clickPersonalAccount();
+        ProfilePage profilePage = mainPage.clickPersonalAccountAsUser();
 
-        LoginPage loginPage = new ProfilePage(driver).clickLogout();
+        assertTrue(profilePage.isLogoutButtonDisplayed(),
+                "В личном кабинете должна быть кнопка 'Выход'");
 
-        assertTrue(loginPage.isDisplayed(
-                        org.openqa.selenium.By.xpath("//button[text()='Войти']")),
+        LoginPage loginPage = profilePage.clickLogout();
+
+        assertTrue(loginPage.isLoginButtonDisplayed(),
                 "После выхода должна открыться страница входа");
     }
 }

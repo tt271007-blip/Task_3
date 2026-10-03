@@ -39,9 +39,6 @@ class RegistrationTest {
 
     @AfterEach
     void tearDown() {
-        if (accessToken != null) {
-            apiClient.deleteUser(accessToken);
-        }
         if (driver != null) {
             driver.quit();
         }
@@ -49,16 +46,13 @@ class RegistrationTest {
 
     @Test
     @DisplayName("Успешная регистрация")
-    @Description("Заполняем форму регистрации валидными данными и проверяем переход на страницу логина")
     void successfulRegistration() {
-        new MainPage(driver).open(URL)
+        LoginPage loginPage = new MainPage(driver).open(URL)
                 .clickLoginButton()
                 .clickRegisterLink()
                 .registerAs(user.name, user.email, user.password);
 
-        LoginPage loginPage = new LoginPage(driver);
-        assertTrue(loginPage.isDisplayed(
-                        org.openqa.selenium.By.xpath("//button[text()='Войти']")),
+        assertTrue(loginPage.isLoginButtonDisplayed(),
                 "После регистрации должна открыться страница входа");
     }
 
@@ -74,7 +68,7 @@ class RegistrationTest {
                 .enterName(shortPassUser.name)
                 .enterEmail(shortPassUser.email)
                 .enterPassword(shortPassUser.password)
-                .clickRegister().clickRegisterLink();
+                .clickRegister();
 
         assertTrue(registerPage.isPasswordErrorDisplayed(),
                 "Должна отображаться ошибка о некорректном пароле");

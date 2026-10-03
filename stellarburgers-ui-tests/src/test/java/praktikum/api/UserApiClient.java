@@ -8,7 +8,7 @@ import static io.restassured.RestAssured.given;
 
 public class UserApiClient {
 
-    private static final String BASE_URL = "https://stellarburgers.education-services.ru";
+    private static final String BASE_URL = "https://qa-stellarburgers.education-services.ru";
     private static final String REGISTER = "/api/auth/register";
     private static final String USER = "/api/auth/user";
 
@@ -29,5 +29,15 @@ public class UserApiClient {
                 .header("Authorization", accessToken)
                 .when()
                 .delete(USER);
+    }
+
+    @Step("API: вход пользователя {user.email}")
+    public Response login(User user) {
+        return given()
+                .baseUri(BASE_URL)
+                .contentType("application/json")
+                .body(user)
+                .when()
+                .post("/api/auth/login");
     }
 }
