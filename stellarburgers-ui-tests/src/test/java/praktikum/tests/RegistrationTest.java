@@ -14,7 +14,7 @@ import praktikum.pages.LoginPage;
 import praktikum.pages.MainPage;
 import praktikum.pages.RegisterPage;
 import praktikum.util.UserGenerator;
-
+import io.restassured.response.Response;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Epic("Stellar Burgers UI")
@@ -39,6 +39,10 @@ class RegistrationTest {
 
     @AfterEach
     void tearDown() {
+        if (accessToken != null) {
+            apiClient.deleteUser(accessToken);
+        }
+
         if (driver != null) {
             driver.quit();
         }
@@ -51,6 +55,9 @@ class RegistrationTest {
                 .clickLoginButton()
                 .clickRegisterLink()
                 .registerAs(user.name, user.email, user.password);
+
+        Response loginResponse = apiClient.login(user);
+        accessToken = loginResponse.jsonPath().getString("accessToken");
 
         assertTrue(loginPage.isLoginButtonDisplayed(),
                 "После регистрации должна открыться страница входа");
